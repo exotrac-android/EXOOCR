@@ -2,6 +2,9 @@
 using System.Net.Http.Headers;
 using System.Net.Http;
 using System.Text;
+using Microsoft.Extensions.FileSystemGlobbing.Internal;
+using System.Text.RegularExpressions;
+
 namespace EXOOCR.API;
 
 public class OCRService: IOCRService
@@ -27,7 +30,6 @@ public class OCRService: IOCRService
 
     public StringContent GetImage(string url)
     {
-        //var image_url = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRFJS5144kuVJx2s2b_1XoXPIOF0TXNhTcCcFBIgFO5pA&s";
         var data = new Dictionary<string, string> {
             { "url", url }
             };
@@ -35,4 +37,26 @@ public class OCRService: IOCRService
         return new StringContent(json, Encoding.UTF8, "application/json");
     }
 
+    public string GetContainerNumber(List<Blocks> blocks)
+    {
+        string sentence = "";
+        string pattern = @"[A-Z]{4}\d{6,7}";
+
+        foreach (var block in blocks)
+        {
+            foreach (var line in block.Lines)
+            {
+                sentence += line.Text;
+            }
+        }
+
+        var matchedValues = Regex.Matches(sentence.Replace(" ", ""), pattern);
+        if (matchedValues.Count == 0)
+        {
+            return "No Matching Characters";
+        }
+
+        var containerNumber = matchedValues[0].Value;
+        return containerNumber;
+    }
 }
